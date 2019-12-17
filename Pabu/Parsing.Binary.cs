@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Buffers.Binary;
+using System.Data.Common;
+using System.IO;
+using System.IO.Compression;
 using System.Text;
 
 namespace Pabu
@@ -20,6 +24,97 @@ namespace Pabu
             obj is Codepoint c && c.IsInitialized && IsInitialized && c.Value == Value;
 
         public override int GetHashCode() => Value.GetHashCode();
+    }
+
+    public static partial class BinaryParsing<TU>
+    {
+        #region Numbers
+
+        public static IParserDesc<short, byte, TU> I16Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(2)
+            select BinaryPrimitives.ReadInt16BigEndian(m.Span);
+
+        public static IParserDesc<short, byte, TU> I16Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(2)
+            select BinaryPrimitives.ReadInt16LittleEndian(m.Span);
+
+        public static IParserDesc<ushort, byte, TU> U16Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(2)
+            select BinaryPrimitives.ReadUInt16BigEndian(m.Span);
+
+        public static IParserDesc<ushort, byte, TU> U16Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(2)
+            select BinaryPrimitives.ReadUInt16LittleEndian(m.Span);
+
+        public static IParserDesc<int, byte, TU> I32Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(4)
+            select BinaryPrimitives.ReadInt32BigEndian(m.Span);
+
+        public static IParserDesc<int, byte, TU> I32Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(4)
+            select BinaryPrimitives.ReadInt32LittleEndian(m.Span);
+
+        public static IParserDesc<uint, byte, TU> U32Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(4)
+            select BinaryPrimitives.ReadUInt32BigEndian(m.Span);
+
+        public static IParserDesc<uint, byte, TU> U32Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(4)
+            select BinaryPrimitives.ReadUInt32LittleEndian(m.Span);
+
+        public static IParserDesc<long, byte, TU> I64Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(8)
+            select BinaryPrimitives.ReadInt64BigEndian(m.Span);
+
+        public static IParserDesc<long, byte, TU> I64Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(8)
+            select BinaryPrimitives.ReadInt64LittleEndian(m.Span);
+
+        public static IParserDesc<ulong, byte, TU> U64Be =>
+            from m in Parsing<byte, TU>.ReadBuffer(8)
+            select BinaryPrimitives.ReadUInt64BigEndian(m.Span);
+
+        public static IParserDesc<ulong, byte, TU> U64Le =>
+            from m in Parsing<byte, TU>.ReadBuffer(8)
+            select BinaryPrimitives.ReadUInt64LittleEndian(m.Span);
+
+        public static IParserDesc<float, byte, TU> Float32Be =>
+            from i in I32Be
+            select BitConverter.Int32BitsToSingle(i);
+        
+        public static IParserDesc<float, byte, TU> Float32Le =>
+            from i in I32Le
+            select BitConverter.Int32BitsToSingle(i);
+        
+        public static IParserDesc<double, byte, TU> Double64Be =>
+            from i in I64Be
+            select BitConverter.Int64BitsToDouble(i);
+        
+        public static IParserDesc<double, byte, TU> Double64Le =>
+            from i in I64Le
+            select BitConverter.Int64BitsToDouble(i);
+
+
+        #endregion
+        
+        
+        #region Compression
+
+        public static IParserDesc<ReadOnlyMemory<byte>, byte, TU> ReadDeflateCompressedBuffer(int len, int decompressedSize) =>
+            from buffer in Parsing<byte, TU>.ReadBuffer(len)
+            let decompressed = DecompressDeflateBuffer(buffer, decompressedSize)
+            select new ReadOnlyMemory<byte>(decompressed);
+
+        private static byte[] DecompressDeflateBuffer(ReadOnlyMemory<byte> buffer, int decompressedSize)
+        {
+            Console.WriteLine($"Decompressing {BitConverter.ToString(buffer.ToArray())}");
+            using var mstr = new MemoryStream();
+            using var inStream = new MemoryStream(buffer.ToArray());
+            using var deflate = new DeflateStream(inStream, CompressionMode.Decompress);
+            deflate.CopyTo(mstr);
+            return mstr.ToArray();
+        }
+        #endregion
     }
 
     public static partial class TextParsing<TU>

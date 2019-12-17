@@ -4,6 +4,7 @@ using System.Collections.Generic;
 namespace Pabu
 {
     public static partial class Parsing<TSeq, TU>
+        where TSeq : IEquatable<TSeq>
     {
         public static IParserDesc<TSeq, TSeq, TU> Head(string label = null) =>
             new ParserDesc<TSeq, TSeq, TU>(state =>
@@ -38,22 +39,33 @@ namespace Pabu
                     new ParseSuccess<ParserState<TSeq, TU>, TSeq, TU>(state, state)
                 )
             );
-        
-        public static IParserDesc<T, TSeq, TU> Choice<T>(params IParserDesc<T, TSeq, TU>[] parsers)
-        => new ParserDesc<T, TSeq, TU>(
-            state =>
-            {
-                IParseResult<T, TSeq, TU> last = null;
-                foreach (var p in parsers)
-                {
-                    last = p.Run(state);
-                    if (last.HasResult)
-                        return last;
-                }
 
-                return last ?? new ParseResult<T, TSeq, TU>(new ParserError<TSeq, TU>(state, 0));
-            }
+        public static IParserDesc<T, TSeq, TU> Choice<T>(params IParserDesc<T, TSeq, TU>[] parsers)
+            => new ParserDesc<T, TSeq, TU>(
+                state =>
+                {
+                    IParseResult<T, TSeq, TU> last = null;
+                    foreach (var p in parsers)
+                    {
+                        last = p.Run(state);
+                        if (last.HasResult)
+                            return last;
+                    }
+
+                    return last ?? new ParseResult<T, TSeq, TU>(new ParserError<TSeq, TU>(state, 0));
+                }
             );
 
+        public static IParserDesc<T, TSeq, TU> Return<T>(T value) =>
+            new ParserDesc<T, TSeq, TU>(state =>
+                new ParseResult<T, TSeq, TU>(new ParseSuccess<T, TSeq, TU>(value, state))
+            );
+
+        public static IParserDesc<ReadOnlyMemory<TSeq>, TSeq, TU> ExpectSequence(ReadOnlyMemory<TSeq> expectation)
+            => from read in ReadBuffer(expectation.Length)
+               from match in expectation.Span.SequenceEqual(read.Span)
+                   ? Return(read)
+                   : Fail<ReadOnlyMemory<TSeq>>("Expected sequence to match")
+               select match;
     }
 }

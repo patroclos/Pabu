@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Data.Common;
-using System.IO;
-using System.IO.Compression;
 using System.Text;
 
 namespace Pabu
@@ -95,25 +93,6 @@ namespace Pabu
             select BitConverter.Int64BitsToDouble(i);
 
 
-        #endregion
-        
-        
-        #region Compression
-
-        public static IParserDesc<ReadOnlyMemory<byte>, byte, TU> ReadDeflateCompressedBuffer(int len, int decompressedSize) =>
-            from buffer in Parsing<byte, TU>.ReadBuffer(len)
-            let decompressed = DecompressDeflateBuffer(buffer, decompressedSize)
-            select new ReadOnlyMemory<byte>(decompressed);
-
-        private static byte[] DecompressDeflateBuffer(ReadOnlyMemory<byte> buffer, int decompressedSize)
-        {
-            Console.WriteLine($"Decompressing {BitConverter.ToString(buffer.ToArray())}");
-            using var mstr = new MemoryStream();
-            using var inStream = new MemoryStream(buffer.ToArray());
-            using var deflate = new DeflateStream(inStream, CompressionMode.Decompress);
-            deflate.CopyTo(mstr);
-            return mstr.ToArray();
-        }
         #endregion
     }
 

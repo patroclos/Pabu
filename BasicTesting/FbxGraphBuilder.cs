@@ -60,6 +60,8 @@ namespace BasicTesting
                 static DotNode MakeGraphNode(Node node, long id) => new DotNode($"\"{node.Name} - {id}\"")
                 {
                     Shape = DotNodeShape.Box,
+                    FillColor = DotColor.Yellow,
+                    Style = DotNodeStyle.Filled,
                     Label = $"{@node.Name} - {id}\\l{string.Join("\\l", node.Properties.Select(p=>p.ToString()))}"
                 };
 
@@ -93,7 +95,7 @@ namespace BasicTesting
                 else
                     toNode = _nodes[to];
                 
-                _graph.Add(new DotArrow(fromNode, toNode){ArrowLabel = c.Mode});
+                _graph.Add(new DotArrow(fromNode, toNode){ArrowLabel = c.Mode, ArrowColor = DotColor.Darkorange});
             }
         }
 
@@ -102,6 +104,7 @@ namespace BasicTesting
                 static DotNode MakeGraphNode(Node node, long? id) => new DotNode(id.HasValue ? $"\"{node.Name} - {id}\"" : $"\"{Guid.NewGuid().ToString()}\"")
                 {
                     Shape = DotNodeShape.Box,
+                    Style = DotNodeStyle.Dashed,
                     Label = $"{@node.Name} - {id}\\l{string.Join("\\l", node.Properties.Select(p=>p.ToString()))}"
                 };
                 
@@ -122,7 +125,7 @@ namespace BasicTesting
                 else
                     toNode = _nodes[to];
                 
-                _graph.Add(new DotArrow(fromNode, toNode){ArrowLabel = arrowLabel, ArrowColor = DotColor.Aquamarine});
+                _graph.Add(new DotArrow(fromNode, toNode){ArrowLabel = arrowLabel});
         }
 
         public override string ToString() => _graph.Compile(false);

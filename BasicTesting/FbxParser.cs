@@ -25,15 +25,27 @@ namespace BasicTesting.Fbx
         }
     }
 
+    public readonly struct FbxData
+    {
+        public readonly IReadOnlyList<Node> Nodes;
+        public readonly uint FormatVersion;
+
+        public FbxData(IReadOnlyList<Node> nodes, uint formatVersion)
+        {
+            Nodes = nodes;
+            FormatVersion = formatVersion;
+        }
+    }
+
     public static class FbxParser
     {
         private const string HeaderSignature = "Kaydara FBX Binary  \x00";
 
-        public static IParserDesc<List<Node>, byte, FbxParserState> ReadFbx =>
+        public static IParserDesc<FbxData, byte, FbxParserState> ReadFbx =>
             from header in ReadHeader
             from _ in FbxParsing.SetState(header)
             from nodes in ReadNode.Many()
-            select nodes;
+            select new FbxData(nodes, header.FormatVersion);
 
         private static IParserDesc<FbxParserState, byte, FbxParserState> ReadHeader =>
             (from signature in FbxParsing.ExpectSequence(Encoding.ASCII.GetBytes(HeaderSignature))

@@ -3,8 +3,11 @@ using System.CodeDom.Compiler;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace BasicTesting.Fbx
 {
@@ -41,6 +44,14 @@ namespace BasicTesting.Fbx
                 _value = value;
                 _typeCode = default;
             }
+        }
+
+        public override string ToString()
+        {
+            using var btw = new StringWriter();
+            using var itw = new IndentedTextWriter(btw);
+            WriteTo(itw);
+            return Regex.Replace(btw.ToString().Trim(), @"[^\u0020-\u007f]+", string.Empty);
         }
 
         public void WriteTo(IndentedTextWriter writer)

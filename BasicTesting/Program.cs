@@ -32,17 +32,21 @@ namespace BasicTesting
             result.WithFailure(r => Console.WriteLine(r.ToString()));
             */
 
-            var buf = File.ReadAllBytes(@"C:\Users\j.jensch\Desktop\parsertest/Frame_240x120.fbx");
+            var buf = File.ReadAllBytes(@"C:\Users\j.jensch\Desktop\untitled.fbx");
             var p = FbxParser.ReadFbx.Run(new ParserState<byte, FbxParserState>(buf));
             p.WithFailure(f=>Console.WriteLine(f));
             p.WithResult(nodes =>
             {
                 var btw = new StringWriter();
                 var tw = new IndentedTextWriter(btw);
-                foreach(var n in nodes.Result)
+                foreach(var n in nodes.Result.Nodes)
                     n.WriteTo(tw);
                 Console.WriteLine(btw.ToString());
                 File.WriteAllText(@"C:\Users\j.jensch\Desktop\out.txt", btw.ToString());
+
+                var graphBuilder = new FbxGraphBuilder();
+                graphBuilder.FromFbx(nodes.Result);
+                File.WriteAllText(@"C:\Users\j.jensch\Desktop\out.dot", graphBuilder.ToString());
             });
         }
     }

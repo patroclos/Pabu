@@ -9,4 +9,8 @@
       <ProjectReference Include="..\Pabu\Pabu.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="DotNetGraph" Version="1.0.3" />
+    </ItemGroup>
+
 </Project>
